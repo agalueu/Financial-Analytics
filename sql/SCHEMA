@@ -1,0 +1,1067 @@
+--Challenge 1 – Total Deposits
+SELECT  COUNT(account_id) AS total_deposits,
+		transaction_type,
+		SUM(amount) AS total_amount
+FROM transactions
+WHERE transaction_type = 'Deposit'
+GROUP BY transaction_type;
+
+--Challenge 2 – Total Withdrawals per Account
+SELECT  COUNT(transaction_id) AS total_transactions,
+		account_id,
+		transaction_type,
+		SUM(amount) AS total_amount
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY account_id, transaction_type;
+
+--Challenge 3 – Total Spending per Category
+SELECT category, SUM(amount) AS total_spent
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY category;
+
+--Challenge 4 – Net Balance per Account
+SELECT  account_id,
+		SUM(CASE 
+      WHEN transaction_type = 'Deposit' THEN amount
+      WHEN transaction_type = 'Withdrawal' THEN -amount
+    END) AS balance
+FROM transactions
+GROUP BY account_id;
+
+--Challenge 5 – Monthly Transactions Summary
+SELECT  COUNT(transaction_id) AS total_transactions,
+		account_id AS user,
+		transaction_type AS type,
+		EXTRACT (MONTH FROM (transaction_date)) AS month
+FROM transactions
+GROUP BY account_id, transaction_type, EXTRACT (MONTH FROM (transaction_date));
+
+--ACTUAL SUMMARY
+SELECT  account_id,
+		transaction_type,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_amount,
+		SUM(CASE 
+      WHEN transaction_type = 'Deposit' THEN amount
+      WHEN transaction_type = 'Withdrawal' THEN -amount
+    END) AS balance
+FROM transactions
+GROUP BY account_id, transaction_type, TO_CHAR(transaction_date, 'YYYY-MM')
+ORDER BY account_id;
+
+--PERFECT SUMMARY
+WITH deposits AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_deposits
+FROM transactions
+WHERE transaction_type = 'Deposit'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraws AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_Withdrawal
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+)
+
+SELECT w.account_id AS user, w.date, total_deposits, total_withdrawal, total_deposits - total_Withdrawal AS balance
+FROM withdraws w
+JOIN deposits d ON w.account_id = d.account_id
+				AND w.date = d.date
+;
+
+
+--MONTHLY SUMMARY INFO
+WITH deposits AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_deposits
+FROM transactions
+WHERE transaction_type = 'Deposit'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraws AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_Withdrawal
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+)
+
+SELECT  COALESCE(d.account_id, w.account_id) AS user, 
+		COALESCE(d.date, w.date) AS date,
+		COALESCE(total_deposits, 0) AS total_deposits,
+		COALESCE(total_withdrawal, 0) AS total_withdrawal,
+		total_deposits - total_Withdrawal AS balance
+FROM withdraws w
+FULL JOIN deposits d ON w.account_id = d.account_id
+				AND w.date = d.date
+ORDER BY user, date;
+
+--RUNNING BALANCE (CUMULATIVE)
+WITH deposits AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_deposits
+FROM transactions
+WHERE transaction_type = 'Deposit'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraws AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_Withdrawal
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+totals AS(
+	SELECT  COALESCE(d.account_id, w.account_id) AS users, 
+			COALESCE(d.date, w.date) AS date,
+			COALESCE(total_deposits, 0) AS total_deposits,
+			COALESCE(total_withdrawal, 0) AS total_withdrawal,
+			COALESCE(total_deposits, 0) - COALESCE(total_Withdrawal, 0) AS balance
+	FROM withdraws w
+	FULL JOIN deposits d ON w.account_id = d.account_id
+					AND w.date = d.date
+	ORDER BY users, date
+),
+
+final_result AS (
+	SELECT  *,
+			--SUM(total_deposits) OVER (PARTITION BY users ORDER BY date) AS cumulative_deposits,
+			--SUM(total_withdrawal) OVER (PARTITION BY users ORDER BY date) AS cumulative_withdrawal,
+			SUM(balance) OVER (PARTITION BY users ORDER BY date) AS running_balance
+	FROM totals
+	ORDER BY users, date
+)
+
+SELECT  users,
+		date,
+		total_deposits AS "Deposits",
+		total_withdrawal AS "Withdrawals",
+		balance,
+		--cumulative_deposits - cumulative_withdrawal AS NET_balance,
+		running_balance
+FROM final_result;
+
+--Challenge: Highest & Lowest Balance per Account
+WITH deposits AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_deposits
+FROM transactions
+WHERE transaction_type = 'Deposit'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraws AS (
+SELECT  account_id,
+		TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+		SUM(amount) AS total_Withdrawal
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+totals AS(
+	SELECT  COALESCE(d.account_id, w.account_id) AS users, 
+			COALESCE(d.date, w.date) AS date,
+			COALESCE(total_deposits, 0) AS total_deposits,
+			COALESCE(total_withdrawal, 0) AS total_withdrawal,
+			COALESCE(total_deposits, 0) - COALESCE(total_Withdrawal, 0) AS balance
+	FROM withdraws w
+	FULL JOIN deposits d ON w.account_id = d.account_id
+					AND w.date = d.date
+	ORDER BY users, date
+),
+
+final_result AS (
+	SELECT  *,
+			SUM(balance) OVER (PARTITION BY users ORDER BY date) AS running_balance
+	FROM totals
+	ORDER BY users, date
+),
+
+ranked AS (
+	SELECT  users,
+			date,
+			total_deposits AS Deposits,
+			total_withdrawal AS Withdrawals,
+			balance,
+			running_balance,
+			RANK () OVER (PARTITION BY users ORDER BY running_balance DESC) AS rb_max,
+			RANK () OVER (PARTITION BY users ORDER BY running_balance ASC) AS rb_min
+	FROM final_result
+)
+
+SELECT  users,
+		date,
+		Deposits,
+		Withdrawals,
+		balance,
+		running_balance
+FROM ranked
+WHERE rb_max = 1 OR rb_min = 1;
+
+--PRO WAY TO DO THE SAME CHALLENGE
+WITH deposits AS (
+    SELECT  account_id,
+            TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+            SUM(amount) AS total_deposits
+    FROM transactions
+    WHERE transaction_type = 'Deposit'
+    GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+withdraws AS (
+    SELECT  account_id,
+            TO_CHAR(transaction_date, 'YYYY-MM') AS date,
+            SUM(amount) AS total_withdrawal
+    FROM transactions
+    WHERE transaction_type = 'Withdrawal'
+    GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+totals AS (
+    SELECT  COALESCE(d.account_id, w.account_id) AS users, 
+            COALESCE(d.date, w.date) AS date,
+            COALESCE(total_deposits, 0) AS total_deposits,
+            COALESCE(total_withdrawal, 0) AS total_withdrawal,
+            COALESCE(total_deposits, 0) - COALESCE(total_withdrawal, 0) AS balance
+    FROM withdraws w
+    FULL JOIN deposits d 
+      ON w.account_id = d.account_id AND w.date = d.date
+),
+final_result AS (
+    SELECT  *,
+            SUM(balance) OVER (PARTITION BY users ORDER BY date) AS running_balance
+    FROM totals
+)
+SELECT DISTINCT
+       users,
+       FIRST_VALUE(running_balance) OVER (PARTITION BY users ORDER BY running_balance DESC) AS max_balance,
+       FIRST_VALUE(date) OVER (PARTITION BY users ORDER BY running_balance DESC) AS max_balance_date,
+       FIRST_VALUE(running_balance) OVER (PARTITION BY users ORDER BY running_balance ASC) AS min_balance,
+       FIRST_VALUE(date) OVER (PARTITION BY users ORDER BY running_balance ASC) AS min_balance_date
+FROM final_result
+ORDER BY users;
+
+--Challenge 5: Top 3 Customers by Average Monthly Balance OR Top 3 accounts per month by balance.
+WITH deposits AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraw AS (
+SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS withdraws
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+totals AS (
+	SELECT  COALESCE(d.account_id, w.account_id) AS users,
+			COALESCE (d.date, w.date) AS date,
+			COALESCE(deposits, 0) AS deposits,
+			COALESCE(withdraws, 0) AS withdraws,
+			COALESCE(deposits, 0) - COALESCE(withdraws, 0) AS balance
+	FROM withdraw w
+	FULL JOIN deposits d ON w.account_id = d.account_id
+			AND w.date = d.date
+	ORDER BY date
+),
+
+results AS (
+	SELECT  users,
+			date,
+			SUM(balance) OVER (PARTITION BY users ORDER BY date) AS monthly_balance
+	FROM totals
+),
+
+ranked AS(
+	SELECT users, date, monthly_balance, RANK () OVER (PARTITION BY date ORDER BY monthly_balance DESC) AS rank
+	FROM results
+)	
+
+SELECT *
+FROM ranked
+WHERE rank <= 3
+ORDER BY date, rank;
+
+--🏦 Challenge 6: Category Analysis – Largest Withdrawal/Deposit by Category
+--ON DEPOSIT
+WITH deposit AS (
+	SELECT  account_id,
+			transaction_date,
+			amount,
+			category,
+			RANK () OVER (PARTITION BY category ORDER BY amount DESC) AS rank_deposit
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+)
+
+SELECT *
+FROM deposit
+WHERE rank_deposit = 1;
+
+--ON WITHDRAWS
+WITH withdraw AS (
+	SELECT  account_id,
+			transaction_date,
+			amount,
+			category,
+			RANK () OVER (PARTITION BY category ORDER BY amount DESC) AS rank_withdrawal
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+)
+
+SELECT *
+FROM withdraw
+WHERE rank_withdrawal = 1;
+
+--Find users who went into a negative balance at any point, and show the first month this happened
+WITH deposit AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraw AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS withdraws
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+totals AS (
+	SELECT  COALESCE(d.account_id, w.account_id) AS users,
+			COALESCE(d.date, w.date) AS date,
+			COALESCE(deposits, 0) AS deposits,
+			COALESCE(withdraws, 0) AS withdraws,
+			COALESCE(deposits, 0) - COALESCE(withdraws, 0) AS balance
+	FROM deposit d
+	FULL JOIN withdraw w ON d.account_id = w.account_id
+					AND d.date = w.date
+),
+
+negatives AS (
+	SELECT  users, date, balance, 
+			ROW_NUMBER () OVER (PARTITION BY users ORDER BY date) AS rn
+	FROM totals
+	WHERE balance < 0
+)
+
+SELECT users, date AS first_date_negative_balance, balance
+FROM negatives
+WHERE rn = 1;
+
+--Challenge 6: “Identify accounts that had negative balances for two or more consecutive months.”
+WITH deposit AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+withdraw AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS withdraws
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+totals AS (
+	SELECT  COALESCE(d.account_id, w.account_id) AS users,
+			COALESCE(d.date, w.date) AS date,
+			COALESCE(deposits, 0) AS deposits,
+			COALESCE(withdraws, 0) AS withdraws,
+			COALESCE(deposits, 0) - COALESCE(withdraws, 0) AS balance
+	FROM deposit d
+	FULL JOIN withdraw w ON d.account_id = w.account_id
+					AND d.date = w.date
+),
+
+negatives AS (
+	SELECT  users, date, balance, 
+			COALESCE(LAG(balance) OVER (PARTITION BY users ORDER BY date), 0) AS previous_balance
+	FROM totals
+
+),
+
+flags AS (
+	SELECT  users, date, balance, 
+			CASE --THIS ONLY CHANGE FROM 0 TO 1 WHEN BALANCE CHANGE FROM + TO - OR VICEVERSA
+                  WHEN balance < 0 AND  previous_balance >= 0 THEN 1
+                  ELSE 0
+               END AS streak_break
+	FROM negatives
+),
+
+finals AS (
+	SELECT  users, date, balance,
+			SUM(streak_break) OVER (PARTITION BY users ORDER BY date) AS streak_id
+	FROM flags
+)
+
+SELECT users, streak_id, COUNT(*) AS negative_months, MIN(date) AS start_month, MAX(date) AS end_month
+FROM finals
+WHERE balance < 0
+GROUP BY users, streak_id
+HAVING COUNT(*) >= 2
+ORDER BY users, start_month;
+
+--For each account, determine the category with the highest deposits and the category with
+--the highest withdrawals per month.
+WITH deposit AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS total_deposit, category
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM'), category
+),
+
+withdraw AS (
+	SELECT account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS total_withdrawal, category
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM'), category
+),
+
+totals AS (
+	SELECT  COALESCE(d.account_id, w.account_id) AS users,
+			COALESCE(d.date, w.date) AS date,
+			COALESCE(d.category, w.category) AS category,
+			COALESCE(total_deposit, 0) AS total_deposit,
+			COALESCE(total_withdrawal, 0) AS total_withdrawal
+	FROM deposit d
+	FULL JOIN withdraw w ON d.account_id = w.account_id
+						AND d.category = w.category
+),
+
+ranked AS (
+	SELECT  *,
+			RANK () OVER (PARTITION BY users, date ORDER BY total_deposit DESC) AS deposit_rank,
+			RANK () OVER (PARTITION BY users, date ORDER BY total_withdrawal DESC) AS withdrawal_rank
+	FROM totals
+)
+
+SELECT  users AS "Users",
+		date AS "Date",
+		category AS "Category",
+		total_deposit AS "Max Deposit",
+		total_withdrawal AS "Max Withdrawal"
+FROM ranked
+WHERE deposit_rank = 1 AND withdrawal_rank = 1 
+ORDER BY users, date;
+
+--TRACKING TRENDS OVER TIME FOR ACCOUNTS
+--1) deposits trend
+WITH deposit AS (
+	SELECT  account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS total_deposit,
+			COALESCE(LAG(SUM(amount)) OVER (PARTITION BY account_id ORDER BY TO_CHAR(transaction_date, 'YYYY-MM')), 0) AS previous_deposit
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+flaged AS (
+	SELECT  *,
+			CASE
+				WHEN total_deposit > previous_deposit THEN 0
+				ELSE 1
+			END AS amount_increased
+	FROM deposit
+),
+
+finals AS (
+	SELECT  *,
+			SUM(amount_increased) OVER (PARTITION BY account_id ORDER BY date) AS streak_id
+	FROM flaged
+)
+
+SELECT  account_id,
+		date,
+		COUNT(streak_id) AS times_increased
+FROM finals
+WHERE streak_id >= 2
+GROUP BY account_id, date;
+
+--2) withdrawals trend
+WITH withdrawals AS (
+	SELECT  account_id, TO_CHAR(transaction_date, 'YYYY-MM') AS date, SUM(amount) AS total_withdrawal,
+			COALESCE(LAG(SUM(amount)) OVER (PARTITION BY account_id ORDER BY TO_CHAR(transaction_date, 'YYYY-MM')), 0) AS previous_withdrawal
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, TO_CHAR(transaction_date, 'YYYY-MM')
+),
+
+flaged AS (
+	SELECT  *,
+			CASE
+				WHEN total_withdrawal > previous_withdrawal THEN 0
+				ELSE 1
+			END AS amount_increased
+	FROM withdrawals
+),
+
+finals AS (
+	SELECT  *,
+			SUM(amount_increased) OVER (PARTITION BY account_id ORDER BY date) AS streak_id
+	FROM flaged
+)
+
+SELECT  account_id,
+		date,
+		COUNT(streak_id) AS times_increased
+FROM finals
+WHERE streak_id >= 2
+GROUP BY account_id, date;
+
+--Month over Month deposit growth per account
+WITH deposit AS (
+SELECT  account_id,
+		DATE_TRUNC('month', transaction_date)::date AS date,
+		SUM(amount) AS total_deposits 
+FROM transactions
+WHERE transaction_type = 'Deposit'
+GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+previous_deposit AS (
+	SELECT  account_id,
+			date,
+			total_deposits,
+			LAG(total_deposits) OVER (PARTITION BY account_id ORDER BY date) AS previous_deposit
+	FROM deposit
+),
+
+final_deposits AS(
+	SELECT  account_id,
+			date,
+			total_deposits,
+			previous_deposit,
+			total_deposits - previous_deposit AS absolute_deposit_change,
+			ROUND((total_deposits - previous_deposit)/NULLIF(previous_deposit, 0) * 100, 2) AS deposit_growth
+	FROM previous_deposit
+),
+--Month over Month withdrawal growth per account
+withdrawal AS (
+SELECT  account_id,
+		DATE_TRUNC('month', transaction_date)::date AS date,
+		SUM(amount) AS total_withdrawal
+FROM transactions
+WHERE transaction_type = 'Withdrawal'
+GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+previous_withdrawal AS (
+	SELECT  account_id,
+			date,
+			total_withdrawal,
+			LAG(total_withdrawal) OVER (PARTITION BY account_id ORDER BY date) AS previous_withdrawal
+	FROM withdrawal
+),
+
+results AS (
+	SELECT  COALESCE(pw.account_id, fd.account_id) AS users,
+			COALESCE(pw.date, fd.date) AS date,
+			COALESCE(total_deposits, 0) AS "Total Deposits",
+			COALESCE(previous_deposit, 0) AS "Previous Deposit",
+			COALESCE(absolute_deposit_change, 0) AS "Absolute Deposit Change",
+			COALESCE(deposit_growth, 0) AS "Deposit Growth",
+			COALESCE(total_withdrawal, 0) AS "Total Withdrawal",
+			COALESCE(previous_withdrawal, 0) AS "Previous Withdrawal",
+			COALESCE(total_withdrawal - previous_withdrawal, 0) AS "Absolute Withdrawal Change",
+			COALESCE(ROUND((total_withdrawal - previous_withdrawal)/NULLIF(previous_withdrawal, 0) * 100, 2), 0) AS "Withdrawal Growth",
+			COALESCE(total_deposits, 0) - COALESCE(total_withdrawal, 0) AS "Balance Flow"
+	FROM previous_withdrawal pw
+	FULL JOIN final_deposits fd ON pw.account_id = fd.account_id
+								AND pw.date = fd.date
+)
+
+SELECT  *,
+		SUM("Total Deposits") OVER (PARTITION BY users ORDER BY date) AS "Cumulative Deposits",
+		SUM("Total Withdrawal") OVER (PARTITION BY users ORDER BY date) AS "Cumulative Withdrawals",
+		SUM("Balance Flow") OVER (PARTITION BY users ORDER BY date) AS "Cumulative Balance"
+FROM results;
+
+--months with the highest deposit spike (growth > 50%)
+WITH deposit AS (
+	SELECT  account_id AS users,
+			DATE_TRUNC('month', transaction_date)::date AS date,
+			SUM(amount) AS total_deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+previous_deposit AS (
+	SELECT  users,
+			date,
+			total_deposits,
+			LAG(total_deposits) OVER (PARTITION BY users ORDER BY date) AS previous_deposit
+	FROM deposit
+),
+
+deposit_result AS (
+	SELECT  *,
+			COALESCE(ROUND((total_deposits - previous_deposit)/NULLIF(previous_deposit, 0) * 100, 2), 0) AS deposit_growth
+	FROM previous_deposit
+)
+
+SELECT  *,
+		CASE
+			WHEN deposit_growth > 50 THEN 'High Deposit Spike'
+			WHEN deposit_growth BETWEEN 0 AND 50 THEN 'Under deposit spike'
+			WHEN deposit_growth < 0 THEN 'caution'
+		END AS activity_flag
+FROM deposit_result;
+
+--months with unusually high withdrawals (e.g., absolute withdrawal > 2× the account’s average).
+WITH withdrawal AS (
+	SELECT  account_id AS users,
+			DATE_TRUNC('month', transaction_date)::date AS date,
+			SUM(amount) AS total_withdrawals
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+previous_withdrawal AS (
+	SELECT  users,
+			date,
+			total_withdrawals
+	FROM withdrawal
+),
+
+average_withdrawal AS (
+	SELECT  *,
+			ROUND(AVG(total_withdrawals) OVER (PARTITION BY users), 2) AS avg_withdrawal
+	FROM previous_withdrawal
+)
+
+SELECT  users,
+		date,
+		total_withdrawals,
+		ROUND(total_withdrawals/avg_withdrawal, 2) AS multiplier,
+		CASE
+			WHEN total_withdrawals > 2 * avg_withdrawal THEN 'Unusually High Withdrawal'
+			ELSE 'Not that high withdrawal'
+		END AS withdrawal_flag
+FROM average_withdrawal;
+
+--UNION both exercises with deposit and withdrawals to get what account has UNUSUAL use at the same time
+WITH deposit AS (
+	SELECT  account_id AS users,
+			DATE_TRUNC('month', transaction_date)::date AS date,
+			SUM(amount) AS total_deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+previous_deposit AS (
+	SELECT  users,
+			date,
+			total_deposits
+	FROM deposit
+),
+
+average_deposit AS (
+	SELECT  *,
+			ROUND(AVG(total_deposits) OVER (PARTITION BY users), 2) AS avg_deposit
+	FROM previous_deposit
+),
+
+final_deposit AS (
+	SELECT  users,
+			date,
+			total_deposits,
+			ROUND(total_deposits/avg_deposit, 2) AS deposit_multiplier,
+			CASE
+				WHEN total_deposits > 2 * avg_deposit THEN 'Unusually High deposit'
+				ELSE 'Not that high deposit'
+			END AS deposit_flag
+	FROM average_deposit
+),
+
+--SAME WITH WITHDRAWAL
+withdrawal AS (
+	SELECT  account_id AS users,
+			DATE_TRUNC('month', transaction_date)::date AS date,
+			SUM(amount) AS total_withdrawals
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+previous_withdrawal AS (
+	SELECT  users,
+			date,
+			total_withdrawals
+	FROM withdrawal
+),
+
+average_withdrawal AS (
+	SELECT  *,
+			ROUND(AVG(total_withdrawals) OVER (PARTITION BY users), 2) AS avg_withdrawal
+	FROM previous_withdrawal
+),
+
+final_results AS (
+	SELECT  COALESCE (aw.users, fd.users) AS users,
+			COALESCE (aw.date, fd.date) AS date,
+			total_deposits,
+			deposit_multiplier,
+			deposit_flag,
+			total_withdrawals,
+			ROUND(total_withdrawals/avg_withdrawal, 2) AS withdrawal_multiplier,
+			CASE
+				WHEN total_withdrawals > 2 * avg_withdrawal THEN 'Unusually High Withdrawal'
+				ELSE 'Not that high withdrawal'
+			END AS withdrawal_flag,
+			COALESCE(total_deposits, 0) - COALESCE(total_withdrawals, 0) AS flow_balance
+	FROM average_withdrawal aw
+	FULL JOIN final_deposit fd ON aw.users = fd.users
+								AND aw.date = fd.date
+)
+
+SELECT *
+FROM final_results;
+--WHERE deposit_flag = 'Unusually High deposit' AND withdrawal_flag = 'Unusually High Withdrawal';
+
+-- Cumulative / Running Totals & Net Flow
+--ON deposits
+WITH deposit AS (
+	SELECT  account_id,
+			DATE_TRUNC('month',	transaction_date)::date AS date,
+			SUM(amount) AS total_deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+cumulative_d AS (
+	SELECT  *,
+			SUM(total_deposits) OVER (PARTITION By account_id ORDER BY date) AS cumulative_deposit
+	FROM deposit
+),
+
+--ON withdrawal
+withdrawal AS (
+	SELECT  account_id,
+			DATE_TRUNC('month',	transaction_date)::date AS date,
+			SUM(amount) AS total_withdrawals
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+cumulative_w AS (
+	SELECT  *,
+			SUM(total_withdrawals) OVER (PARTITION By account_id ORDER BY date) AS cumulative_withdrawal
+	FROM withdrawal
+),
+
+joined AS (
+	SELECT  COALESCE(d.account_id, w.account_id) AS users,
+			COALESCE(d.date, w.date) AS date,
+			COALESCE(total_deposits, 0) AS total_deposits,
+			COALESCE(cumulative_deposit, 0) AS cumulative_deposit,
+			COALESCE(total_withdrawals, 0) AS total_withdrawals,
+			COALESCE(cumulative_withdrawal, 0) AS cumulative_withdrawal,
+			COALESCE(total_deposits, 0) - COALESCE(total_withdrawals, 0) AS monthly_net_flow
+	FROM cumulative_d d
+	FULL JOIN cumulative_w w ON d.account_id = w.account_id
+							AND d.date = w.date
+)
+
+SELECT  *,
+		SUM(monthly_net_flow) OVER (PARTITION By users ORDER BY date) AS cumulative_balance
+FROM joined;
+
+/*USING GENERATE SERIES
+SYNTAX SELECT generate_series(start, stop, step(interval))...
+
+SELECT generate_series(
+		(SELECT MIN(DATE_TRUNC('month', transaction_date)) FROM transactions),
+		(SELECT MAX(DATE_TRUNC('month', transaction_date)) FROM transactions),
+		interval '1 month'
+)::date AS months;*/
+-- NOW LETS DO LAST STEP BUT WITHOUT FULL JOIN .... THIS IS FINAL ANALYSIS WITH EVERYTHING
+WITH months AS(
+	SELECT generate_series(
+		(SELECT MIN(DATE_TRUNC('month', transaction_date)) FROM transactions),
+		(SELECT MAX(DATE_TRUNC('month', transaction_date)) FROM transactions),
+		interval '1 month'
+)::date AS date
+),
+
+account AS (
+	SELECT DISTINCT account_id FROM transactions
+),
+
+account_month AS (
+	SELECT a.account_id, m.date
+	FROM account a
+	CROSS JOIN months m
+	ORDER BY a.account_id, m.date
+),
+--ON deposits
+deposit AS (
+	SELECT  account_id,
+			DATE_TRUNC('month',	transaction_date)::date AS date,
+			SUM(amount) AS total_deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+cumulative_d AS (
+	SELECT  *,
+			SUM(total_deposits) OVER (PARTITION BY account_id ORDER BY date) AS cumulative_deposit,
+			AVG(total_deposits) OVER (PARTITION BY account_id) AS avg_deposit
+	FROM deposit
+),
+
+--ON withdrawal
+withdrawal AS (
+	SELECT  account_id,
+			DATE_TRUNC('month',	transaction_date)::date AS date,
+			SUM(amount) AS total_withdrawals
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+cumulative_w AS (
+	SELECT  *,
+			SUM(total_withdrawals) OVER (PARTITION By account_id ORDER BY date) AS cumulative_withdrawal,
+			AVG(total_withdrawals) OVER (PARTITION BY account_id) AS avg_withdrawal
+	FROM withdrawal
+),
+
+overall AS (
+	SELECT  am.account_id AS users,
+			am.date AS date,
+			COALESCE(total_deposits, 0) AS total_deposits,
+			COALESCE(cumulative_deposit, 0) AS cumulative_deposit,
+			COALESCE(total_withdrawals, 0) AS total_withdrawals,
+			COALESCE(cumulative_withdrawal, 0) AS cumulative_withdrawal,
+			COALESCE(total_deposits, 0) - COALESCE(total_withdrawals, 0) AS monthly_net_flow,
+			SUM(COALESCE(total_deposits, 0) - COALESCE(total_withdrawals, 0))
+	   			 OVER (PARTITION BY am.account_id ORDER BY am.date) AS cumulative_balance,
+			COALESCE(ROUND(total_deposits/NULLIF(total_withdrawals, 0), 2), 0) AS multiplier,
+			CASE
+				WHEN total_deposits > 2 * avg_deposit THEN 'Unusually High deposit'
+				ELSE 'Not that high deposit'
+			END AS deposit_flag,
+			CASE
+				WHEN total_withdrawals > 2 * avg_withdrawal THEN 'Unusually High Withdrawal'
+				ELSE 'Not that high withdrawal'
+			END AS withdrawal_flag
+	FROM account_month am
+	LEFT JOIN cumulative_d cd ON am.account_id = cd.account_id
+								AND am.date = cd.date
+	LEFT JOIN cumulative_w cw ON am.account_id = cw.account_id
+								AND am.date = cw.date
+)
+
+/*Next step (Step 5) could be:
+Adding categorization rules (like “High Activity”, “Low Activity”, “Dormant”) based on balances or transaction
+volumes.
+Or producing a reporting-ready view (maybe a materialized view in PostgreSQL) so analysts don’t have to run this
+CTE every time.*/
+
+SELECT  *,
+		CASE
+	    WHEN total_deposits = 0 AND total_withdrawals = 0 THEN 'Dormant'
+	    WHEN deposit_flag = 'Unusually High deposit' OR withdrawal_flag = 'Unusually High Withdrawal' THEN 'Anomalous'
+	    WHEN monthly_net_flow >= 1500 THEN 'High Activity'
+	    WHEN monthly_net_flow < 500 THEN 'Low Activity'
+	    ELSE 'Normal'
+END AS activity_category
+FROM overall;
+-- WE CAN SHOW FOR PORTFOLIO JUST A SUMMERIZE TABLE ONLY WITH account_id, date, activity_category
+
+/*So for the next step i'll build a base structure script then layered into seperate things for cleaner view
+and understanding of what is happening*/
+
+-- FACT TABLE AKA Account-Month Metrics
+CREATE OR REPLACE VIEW account_month_metrics AS 
+WITH months AS(
+	SELECT generate_series(
+		(SELECT MIN(DATE_TRUNC('month', transaction_date)) FROM transactions),
+		(SELECT MAX(DATE_TRUNC('month', transaction_date)) FROM transactions),
+		interval '1 month'
+)::date AS date
+),
+
+account AS (
+	SELECT DISTINCT account_id FROM transactions
+),
+
+account_month AS (
+	SELECT a.account_id, m.date
+	FROM account a
+	CROSS JOIN months m
+	ORDER BY a.account_id, m.date
+),
+--ON deposits
+deposit AS (
+	SELECT  account_id,
+			DATE_TRUNC('month',	transaction_date)::date AS date,
+			SUM(amount) AS total_deposits
+	FROM transactions
+	WHERE transaction_type = 'Deposit'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+cumulative_d AS (
+	SELECT  *,
+			SUM(total_deposits) OVER (PARTITION BY account_id ORDER BY date) AS cumulative_deposit,
+			AVG(total_deposits) OVER (PARTITION BY account_id) AS avg_deposit
+	FROM deposit
+),
+
+--ON withdrawal
+withdrawal AS (
+	SELECT  account_id,
+			DATE_TRUNC('month',	transaction_date)::date AS date,
+			SUM(amount) AS total_withdrawals
+	FROM transactions
+	WHERE transaction_type = 'Withdrawal'
+	GROUP BY account_id, DATE_TRUNC('month', transaction_date)
+),
+
+cumulative_w AS (
+	SELECT  *,
+			SUM(total_withdrawals) OVER (PARTITION By account_id ORDER BY date) AS cumulative_withdrawal,
+			AVG(total_withdrawals) OVER (PARTITION BY account_id) AS avg_withdrawal
+	FROM withdrawal
+),
+
+overall AS (
+	SELECT  am.account_id AS users,
+			am.date AS date,
+			COALESCE(total_deposits, 0) AS total_deposits,
+			COALESCE(cumulative_deposit, 0) AS cumulative_deposit,
+			COALESCE(total_withdrawals, 0) AS total_withdrawals,
+			COALESCE(cumulative_withdrawal, 0) AS cumulative_withdrawal,
+			COALESCE(total_deposits, 0) - COALESCE(total_withdrawals, 0) AS monthly_net_flow,
+			SUM(COALESCE(total_deposits, 0) - COALESCE(total_withdrawals, 0))
+	   			 OVER (PARTITION BY am.account_id ORDER BY am.date) AS cumulative_balance,
+			COALESCE(ROUND(total_deposits/NULLIF(total_withdrawals, 0), 2), 0) AS multiplier,
+			CASE
+				WHEN total_deposits > 2 * avg_deposit THEN 'Unusually High deposit'
+				ELSE 'Not that high deposit'
+			END AS deposit_flag,
+			CASE
+				WHEN total_withdrawals > 2 * avg_withdrawal THEN 'Unusually High Withdrawal'
+				ELSE 'Not that high withdrawal'
+			END AS withdrawal_flag
+	FROM account_month am
+	LEFT JOIN cumulative_d cd ON am.account_id = cd.account_id
+								AND am.date = cd.date
+	LEFT JOIN cumulative_w cw ON am.account_id = cw.account_id
+								AND am.date = cw.date
+)
+
+SELECT  *,
+		CASE
+	    WHEN total_deposits = 0 AND total_withdrawals = 0 THEN 'Dormant'
+	    WHEN deposit_flag = 'Unusually High deposit' OR withdrawal_flag = 'Unusually High Withdrawal' THEN 'Anomalous'
+	    WHEN monthly_net_flow >= 1500 THEN 'High Activity'
+	    WHEN monthly_net_flow < 500 THEN 'Low Activity'
+	    ELSE 'Normal'
+END AS activity_category
+FROM overall
+;
+
+--Segmentation / Profiling
+WITH table1 AS (
+	SELECT  users,
+			ROUND(AVG(monthly_net_flow), 2) AS avg_netflow,
+			COUNT (*) AS number_of_month,
+			COUNT (*) FILTER(WHERE monthly_net_flow > 0) AS number_of_positives,
+			COUNT (*) FILTER(WHERE monthly_net_flow < 0) AS number_of_negatives,
+			COUNT (*) FILTER(WHERE total_deposits = 0 AND total_withdrawals = 0) AS number_of_dormant,
+			COUNT (*) FILTER(WHERE deposit_flag = 'Unusually High deposit' OR withdrawal_flag = 'Unusually High Withdrawal') AS number_of_anomalous
+	FROM account_month_metrics
+	GROUP BY users
+)
+
+SELECT 	users,
+		CASE
+			WHEN number_of_dormant::DECIMAL/NULLIF(number_of_month, 0) * 100 > 50 THEN 'Dormant'
+			WHEN number_of_anomalous > 0 THEN 'Anomalous'
+			WHEN number_of_positives > number_of_negatives THEN 'Saver'
+			WHEN number_of_positives < number_of_negatives THEN 'Spender'
+			ELSE 'Balanced'
+		END AS segment
+FROM table1;
+
+--Risk / Health Indicators
+/*For this example im going to take this statements
+High risk: mostly negative net flow months, or many anomalous months, or low cumulative balance.
+Medium risk: mixed behavior, some negative months or occasional anomalies.
+Low risk: mostly positive net flow, few anomalies, stable balance.*/
+WITH table1 AS (
+	SELECT  users,
+			ROUND(AVG(monthly_net_flow), 2) AS avg_netflow,
+			COUNT (*) AS number_of_month,
+			COUNT (*) FILTER(WHERE monthly_net_flow > 0) AS number_of_positives,
+			COUNT (*) FILTER(WHERE monthly_net_flow < 0) AS number_of_negatives,
+			COUNT (*) FILTER(WHERE total_deposits = 0 AND total_withdrawals = 0) AS number_of_dormant,
+			COUNT (*) FILTER(WHERE deposit_flag = 'Unusually High deposit' OR withdrawal_flag = 'Unusually High Withdrawal') AS number_of_anomalous
+	FROM account_month_metrics
+	GROUP BY users
+),
+
+last_cumulative AS (
+  SELECT DISTINCT ON (users)
+         users,
+         cumulative_balance
+  FROM account_month_metrics
+  ORDER BY users, date DESC
+),
+
+risk_metrics AS (
+	SELECT  t.users AS users, 
+			avg_netflow,
+			ROUND(number_of_negatives/number_of_month::DECIMAL * 100, 2) AS perc_negative_month,
+			ROUND(number_of_anomalous/number_of_month::DECIMAL * 100, 2) AS perc_anomalous_month,
+			ROUND(number_of_dormant/number_of_month::DECIMAL * 100, 2) AS perc_dormant_month,
+			cumulative_balance
+	FROM table1 t
+	JOIN last_cumulative lc ON t.users = lc.users
+)
+
+SELECT  users,
+		avg_netflow,
+		perc_negative_month,
+		perc_anomalous_month,
+		cumulative_balance,
+		CASE
+			WHEN perc_negative_month > 50 OR perc_anomalous_month > 25 OR cumulative_balance < 0 THEN 'High risk'
+			WHEN perc_negative_month BETWEEN 20 AND 50 AND cumulative_balance >= 0 THEN 'Medium risk'
+			WHEN perc_negative_month < 20 AND cumulative_balance > 0 THEN 'Low risk'
+		END AS risk,
+		CASE 
+			WHEN perc_dormant_month > 50 THEN 'Dormant'
+			WHEN avg_netflow > 800 THEN 'High'
+			WHEN avg_netflow < 400 THEN 'Low'
+			ELSE 'Balance'
+		END AS retention
+FROM risk_metrics;
