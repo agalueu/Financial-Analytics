@@ -1,57 +1,38 @@
--- 1. What are the Monthly Income vs Expenses for all users?
-📝 Query Goal
+# 1. What are the Monthly Income vs Expenses for all users?
+### 📝 Query Goal
 To calculate total income and total expenses per month, helping track cash inflows and outflows over time.
 
-⚙️ Steps / Logic
+### ⚙️ Steps / Logic
+- DATE_TRUNC('month', transaction_date) → groups transactions by month (ignoring day details).
+- CASE statements:
+    *If transaction_type = 'Deposit', sum amounts into total_income.
+    *If transaction_type = 'Withdrawal', sum amounts into total_expenses.
+- Aggregate with SUM → calculates total deposits and withdrawals for each month.
+- ORDER BY month → results displayed chronologically.
 
-DATE_TRUNC('month', transaction_date) → groups transactions by month (ignoring day details).
-
-CASE statements:
-
-If transaction_type = 'Deposit', sum amounts into total_income.
-
-If transaction_type = 'Withdrawal', sum amounts into total_expenses.
-
-Aggregate with SUM → calculates total deposits and withdrawals for each month.
-
-ORDER BY month → results displayed chronologically.
-
-📊 Business Insights
-
-Identifies monthly financial health by comparing income vs expenses.
-
-Reveals if the company (or account) is spending more than earning.
-
-Helps detect seasonal trends (e.g., higher expenses during certain months).
-
-Provides a baseline for budgeting and forecasting.
+### 📊 Business Insights
+- Identifies monthly financial health by comparing income vs expenses.
+- Reveals if the company (or account) is spending more than earning.
+- Helps detect seasonal trends (e.g., higher expenses during certain months).
+- Provides a baseline for budgeting and forecasting.
 
 Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
 
-
--- 2. What are the total spent by Category?
-📝 Query Goal
+# 2. What are the total spent by Category?
+### 📝 Query Goal
 To calculate total spending per category, allowing identification of where the majority of withdrawals (expenses) are going.
 
-⚙️ Steps / Logic
+### ⚙️ Steps / Logic
+- Filter transactions → WHERE transaction_type = 'Withdrawal' ensures only expenses are considered.
+- Group by category → aggregates withdrawals by expense type (e.g., Rent, Groceries, Utilities).
+- SUM(amount) → computes total spent per category.
+- ORDER BY total_spent DESC → ranks categories from highest to lowest spending.
 
-Filter transactions → WHERE transaction_type = 'Withdrawal' ensures only expenses are considered.
-
-Group by category → aggregates withdrawals by expense type (e.g., Rent, Groceries, Utilities).
-
-SUM(amount) → computes total spent per category.
-
-ORDER BY total_spent DESC → ranks categories from highest to lowest spending.
-
-📊 Business Insights
-
-Shows the biggest cost drivers (e.g., Rent or Groceries).
-
-Helps prioritize cost control strategies.
-
-Useful for budget planning → know which categories to monitor closely.
-
-Enables tracking of spending habits over time if combined with monthly filters.
+### 📊 Business Insights
+- Shows the biggest cost drivers (e.g., Rent or Groceries).
+- Helps prioritize cost control strategies.
+- Useful for budget planning → know which categories to monitor closely.
+- Enables tracking of spending habits over time if combined with monthly filters.
 
 Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
 
