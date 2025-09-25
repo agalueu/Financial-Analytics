@@ -54,9 +54,10 @@ Relationships:
 All analysis queries use this table as a single fact table, allowing multiple metrics and aggregates per user/month.
 
 ### 📊 Power BI Integration
-- KPI cards for Revenue, Expenses, Net Profit.
-- Line charts for monthly/quarterly trends.
-- Actual vs Budget comparisons.
+- KPI cards for users, deposits, expenses, risk, activity.
+- Line charts for monthly trends.
+- Incoming vs expenses comparisons.
+- Monthly flow and balances
 - Category breakdowns (expenses by type).
 
     Sample dashboard ... [Overall Chart](images/overall_chart.png) & [Continue Overall Chart](images/Overall_chart_2.png)
