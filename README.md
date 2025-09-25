@@ -59,7 +59,7 @@ All analysis queries use this table as a single fact table, allowing multiple me
 - Actual vs Budget comparisons.
 - Category breakdowns (expenses by type).
 
-    Sample dashboard ... [Overall Chart](images/overall_chart.png)
+    Sample dashboard ... [Overall Chart](images/overall_chart.png) & [Continue Overall Chart](images/overall_chart_2.png)
 
 ### 📑 Queries, Analysis & Insights
 For detailed SQL queries and insights, see [Analysis Resume](Analysis_resume.md)
