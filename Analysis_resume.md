@@ -16,7 +16,7 @@ To calculate total income and total expenses per month, helping track cash inflo
 - Helps detect seasonal trends (e.g., higher expenses during certain months).
 - Provides a baseline for budgeting and forecasting.
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Income Vs expenses](images/income_vs_expenses.png)
 
 # 2. What are the total spent by Category?
 ### 📝 Query Goal
@@ -34,7 +34,7 @@ To calculate total spending per category, allowing identification of where the m
 - Useful for budget planning → know which categories to monitor closely.
 - Enables tracking of spending habits over time if combined with monthly filters.
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Total expenses](images/spent_category.png)
 
 # 3. What is the highest and lowest balance per account?
 ### 📝 Query Goal
@@ -62,7 +62,7 @@ To calculate each user’s running balance over time, and identify their maximum
 - Enables personalized financial advice (e.g., budgeting recommendations for users whose expenses consistently exceed income).
 - Forms the foundation for trend analysis dashboards in Power BI (e.g., line chart of running balance, annotated with min/max points).
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Max/Min Balance](images/max_min_balance.png)
 
 # 4. Identify accounts that had negative balances for two or more consecutive months
 ### 📝 Query Goal
@@ -89,7 +89,7 @@ To identify periods where users had two or more consecutive months with negative
 - Reveals recurring risk patterns — are certain months or users more prone to consecutive deficits?
 - Valuable for early warning systems in financial institutions.
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Consecutive negatives](images/consecutive_negative_balance.png)
 
 # 5. Which category has the highest deposits and the highest withdrawals per month?.
 ### 📝 Query Goal
@@ -112,7 +112,7 @@ This helps highlight financial priorities and spending patterns at the category 
 - Supports budgeting & expense monitoring → users can see which areas need cost control or investment focus.
 - Enables trend analysis → track how top categories evolve over time.
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Highest deposit/withdrawal](images/highest_deposits_withdrawals.png)
 
 # 6. Month over Month deposit/withdrawals growth per account
 ### 📝 Query Goal
@@ -146,7 +146,7 @@ This shows both absolute and percentage growth, and helps visualize long-term tr
 - Provides cumulative balance trends, useful for forecasting liquidity.
 - Supports financial planning dashboards in Power BI with growth metrics and cumulative flows.
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Month over Month growth](images/month_over_month_growth.png)
 
 # 7. Account activity
 ### 📝 Query Goal
@@ -186,7 +186,7 @@ This helps monitor user behavior and detect outliers.
 - Supports behavior segmentation → accounts can be categorized for personalized notifications, offers, or alerts.
 - Enables trend analysis → track user activity evolution over time.
   
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Acount Activity](images/acc_activity.png)
 
 # 8. Segmentation / Profiling
 ### 📝 Query Goal
@@ -223,68 +223,43 @@ This helps understand user behavior patterns and informs financial strategy or t
   * Anomalous users → monitor for risk/fraud.
 - Supports dashboarding and KPI reporting for account management teams.
 
-Sample img: [Profit Hotspot](images/query_profit_hotspot.png)
+Sample img: [Segmentation](images/segmentation.png)
 
 # 9. Risk / Health Indicators
 ### 📝 Query Goal
 To categorize users based on:
-
-Risk → likelihood of financial stress or instability
-
-Retention potential → probability of remaining active based on activity and net flow
+   - Risk → likelihood of financial stress or instability
+   - Retention potential → probability of remaining active based on activity and net flow
 
 This provides actionable insights for risk management and customer retention strategies.
 
-⚙️ Steps / Logic
+### ⚙️ Steps / Logic
+- Compute monthly metrics per user (table1)
+   * Average monthly net flow (avg_netflow).
+   * Count total months, positive months, negative months, dormant months, anomalous months.
+- Retrieve latest cumulative balance (last_cumulative)
+   Ensures risk classification uses most recent financial position.
+- Combine metrics (risk_metrics)
+   * Calculate percentages:
+      * Negative months (%)
+      * Anomalous months (%)
+      * Dormant months (%)
+- Classify risk
+   * High risk → >50% negative months OR >25% anomalous months OR cumulative balance < 0.
+   * Medium risk → 20–50% negative months with positive balance.
+   * Low risk → <20% negative months with positive balance.
+- Classify retention potential
+   * Dormant → >50% months inactive.
+   * High → avg_netflow > 800.
+   * Low → avg_netflow < 400.
+   * Balance → otherwise.
 
-Compute monthly metrics per user (table1)
+### 📊 Business Insights
+- Risk classification helps identify users who may need financial support, monitoring, or intervention.
+- Retention segmentation highlights:
+   * Users likely to remain active.
+   * Users at risk of inactivity (Dormant or Low retention).
+- Supports personalized engagement strategies for marketing, loyalty programs, or alerts.
+- Combines behavioral and financial metrics for a comprehensive view of user health.
 
-Average monthly net flow (avg_netflow).
-
-Count total months, positive months, negative months, dormant months, anomalous months.
-
-Retrieve latest cumulative balance (last_cumulative)
-
-Ensures risk classification uses most recent financial position.
-
-Combine metrics (risk_metrics)
-
-Calculate percentages:
-
-Negative months (%)
-
-Anomalous months (%)
-
-Dormant months (%)
-
-Classify risk
-
-High risk → >50% negative months OR >25% anomalous months OR cumulative balance < 0.
-
-Medium risk → 20–50% negative months with positive balance.
-
-Low risk → <20% negative months with positive balance.
-
-Classify retention potential
-
-Dormant → >50% months inactive.
-
-High → avg_netflow > 800.
-
-Low → avg_netflow < 400.
-
-Balance → otherwise.
-
-📊 Business Insights
-
-Risk classification helps identify users who may need financial support, monitoring, or intervention.
-
-Retention segmentation highlights:
-
-Users likely to remain active.
-
-Users at risk of inactivity (Dormant or Low retention).
-
-Supports personalized engagement strategies for marketing, loyalty programs, or alerts.
-
-Combines behavioral and financial metrics for a comprehensive view of user health.
+Sample img: [Risk](images/risk.png)
