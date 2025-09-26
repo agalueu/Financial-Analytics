@@ -33,11 +33,11 @@ transactions:
 Detailed query analysis, and logic are documented in [Analysis resume](sql/Analysis_resume.sql).
 
 ### 📁 Repository Structure
-docs/                  → ERD
-images/                → screenshots of dashboards (Power BI) and query results (pgAdmin)
-sql/                   → database schema, load script, and analysis queries
-Analysis_resume.md     → All queries analysis used for this repository
-README.md              → project summary and instructions  
+- docs/                  → ERD
+- images/                → screenshots of dashboards (Power BI) and query results (pgAdmin)
+- sql/                   → database schema, load script, and analysis queries
+- Analysis_resume.md     → All queries analysis used for this repository
+- README.md              → project summary and instructions  
 
 ### ⚙️ How to Reproduce
 - Create a PostgreSQL database:
