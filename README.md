@@ -1,9 +1,9 @@
 # 💰 Financial Analytics Project
-### 📌 Overview
+## 📌 Overview
 This project analyzes transaction data to extract insights on user behavior, spending patterns, account balances, and risk segmentation.
 It demonstrates advanced SQL techniques, data modeling, and Power BI integration for visualization.
 
-###  📊 Dataset
+##  📊 Dataset
 This project uses a single table:
 
 transactions:
@@ -17,13 +17,13 @@ transactions:
 
 **All analysis queries are performed on this dataset.**
 
-### 🛠️ Tools & Technologies
+## 🛠️ Tools & Technologies
 - PostgreSQL – querying & transformations.
 - Power BI – visualization & dashboarding.
 - SQL → schema design, ETL, KPIs.
 - GitHub – version control & portfolio showcase.
 
-### ❓ Key Business Questions
+## ❓ Key Business Questions
 - How do monthly deposits and withdrawals trend over time per user? [Deposits vs Withdrawals](images/deposit_balance_expences.png).
 - Which categories drive the highest spending and deposits? [Expences by category](images/deposit_balance_expences.png)
 - What are users’ minimum and maximum balances? [Max/Min Balance](images/deposit_balance_expences.png)
@@ -33,7 +33,7 @@ transactions:
 
 Detailed query analysis, and logic are documented in [Analysis resume](sql/Analysis_resume.sql).
 
-### 📁 Repository Structure
+## 📁 Repository Structure
 - docs/                  → ERD
 - images/                → screenshots of dashboards (Power BI) and query results (pgAdmin)
 - sql/                   → database schema, load script, and analysis queries
@@ -41,13 +41,13 @@ Detailed query analysis, and logic are documented in [Analysis resume](sql/Analy
 - README.md              → project summary and instructions  
 
 
-### Database ERD
+## Database ERD
 Relationships:
   - transactions.account_id → links deposits and withdrawals per user.
 
 All analysis queries use this table as a single fact table, allowing multiple metrics and aggregates per user/month.
 
-### 🔄 How to Reproduce
+## 🔄 How to Reproduce
 - Create a PostgreSQL database:
       * In pgAdmin → right-click Databases → Create - Database → name it hr_analytics (or any name you preffer).
 - Schema & Data Import:
@@ -56,7 +56,7 @@ All analysis queries use this table as a single fact table, allowing multiple me
       * Analytical SQL queries are available in [Analysis](sql/Analysis.sql).
       * These queries can be run in pgAdmin or connected directly to Power BI for visualization.
 
-### 📊 Power BI Integration
+## 📊 Power BI Integration
 - KPI cards for users, deposits, expenses, risk, activity.
 - Line charts for monthly trends.
 - Incoming vs expenses comparisons.
@@ -65,5 +65,5 @@ All analysis queries use this table as a single fact table, allowing multiple me
 
     Sample dashboard ... [Overall Chart](images/overall_chart.png) & [Continue Overall Chart](images/Overall_chart_2.png)
 
-### 📑 Queries, Analysis & Insights
+## 📑 Queries, Analysis & Insights
 For detailed SQL queries and insights, see [Analysis Resume](Analysis_resume.md)
