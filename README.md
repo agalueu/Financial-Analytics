@@ -3,7 +3,7 @@
 This project analyzes transaction data to extract insights on user behavior, spending patterns, account balances, and risk segmentation.
 It demonstrates advanced SQL techniques, data modeling, and Power BI integration for visualization.
 
-###  📂 Dataset
+###  📊 Dataset
 This project uses a single table:
 
 transactions:
@@ -17,9 +17,10 @@ transactions:
 
 **All analysis queries are performed on this dataset.**
 
-### 🛠 Tools
+### 🛠️ Tools & Technologies
 - PostgreSQL – querying & transformations.
 - Power BI – visualization & dashboarding.
+- SQL → schema design, ETL, KPIs.
 - GitHub – version control & portfolio showcase.
 
 ### ❓ Key Business Questions
@@ -39,18 +40,21 @@ Detailed query analysis, and logic are documented in [Analysis resume](sql/Analy
 - Analysis_resume.md     → All queries analysis used for this repository
 - README.md              → project summary and instructions  
 
-### ⚙️ How to Reproduce
-- Create a PostgreSQL database:
-- In pgAdmin → right-click Databases → Create - Database → name it hr_analytics.
-- Schema & Data Import:
-    * Run the schema script in sql/schema.sql to create the employee table, can copy [SCHEMA](sql/SCHEMA.sql).
-- Sample queries are aviliable in [Analysis](sql/Analysis.sql).
 
 ### Database ERD
 Relationships:
   - transactions.account_id → links deposits and withdrawals per user.
 
 All analysis queries use this table as a single fact table, allowing multiple metrics and aggregates per user/month.
+
+### 🔄 How to Reproduce
+- Create a PostgreSQL database:
+      * In pgAdmin → right-click Databases → Create - Database → name it hr_analytics (or any name you preffer).
+- Schema & Data Import:
+      * Run the schema script in [SCHEMA](sql/SCHEMA.sql) to create all tables and insert data.
+- Sample queries:
+      * Analytical SQL queries are available in [Analysis](sql/Analysis.sql).
+      * These queries can be run in pgAdmin or connected directly to Power BI for visualization.
 
 ### 📊 Power BI Integration
 - KPI cards for users, deposits, expenses, risk, activity.
