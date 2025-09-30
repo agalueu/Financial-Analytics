@@ -17,6 +17,9 @@ transactions:
 
 **All analysis queries are performed on this dataset.**
 
+## 🌐 Original Data Source
+The dataset is based on financial transaction and profit & loss records. It includes revenue, expenses, and profitability metrics across categories and time periods.
+
 ## 🛠️ Tools & Technologies
 - PostgreSQL – querying & transformations.
 - Power BI – visualization & dashboarding.
@@ -41,7 +44,7 @@ Detailed query analysis, and logic are documented in [Analysis resume](sql/Analy
 - README.md              → project summary and instructions  
 
 
-## Database ERD
+## 🗄 Database Schema & ERD
 Relationships:
   - transactions.account_id → links deposits and withdrawals per user.
 
@@ -56,7 +59,7 @@ All analysis queries use this table as a single fact table, allowing multiple me
       * Analytical SQL queries are available in [Analysis](sql/Analysis.sql).
       * These queries can be run in pgAdmin or connected directly to Power BI for visualization.
 
-## 📊 Power BI Integration
+## 📈 Power BI Dashboard
 - KPI cards for users, deposits, expenses, risk, activity.
 - Line charts for monthly trends.
 - Incoming vs expenses comparisons.
@@ -65,5 +68,8 @@ All analysis queries use this table as a single fact table, allowing multiple me
 
     Sample dashboard ... [Overall Chart](images/overall_chart.png) & [Continue Overall Chart](images/Overall_chart_2.png)
 
-## 📑 Queries, Analysis & Insights
-For detailed SQL queries and insights, see [Analysis Resume](Analysis_resume.md)
+## ✅ Key Takeaways
+
+- Revenue streams are concentrated in a few high-performing categories.
+- Seasonal variations significantly impact profitability.
+- Expense control in low-margin areas is critical for improving overall net income.
