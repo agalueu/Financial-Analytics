@@ -1,75 +1,97 @@
-# 💰 Financial Analytics Project
+# 💳 Financial Transactions Analysis
+
 ## 📌 Overview
-This project analyzes transaction data to extract insights on user behavior, spending patterns, account balances, and risk segmentation.
-It demonstrates advanced SQL techniques, data modeling, and Power BI integration for visualization.
+This project analyzes financial transaction data to evaluate user behavior, cash flow trends, risk exposure, and account activity patterns.
 
-##  📊 Dataset
-This project uses a single table:
+The dataset simulates real-world banking activity, including deposits and withdrawals across multiple users, enabling the construction of analytical metrics typically used in financial analytics and fintech environments.
 
-transactions:
-- transaction_id → unique ID (Primary Key)
-- account_id → account reference
-- transaction_date → date of transaction
-- transaction_type → deposit or withdrawal
-- amount → transaction amount (≥ 0)
-- currency → transaction currency (default: USD)
-- category → category of transaction (salary, rent, groceries, etc.)
+---
 
-**All analysis queries are performed on this dataset.**
+## 🎯 Objectives
+- Track income vs expenses over time
+- Analyze spending behavior by category
+- Monitor account balances and detect financial stress
+- Identify anomalous activity patterns
+- Segment users based on financial behavior
+- Assess financial risk and retention potential
 
-## 🌐 Original Data Source
-The dataset is based on financial transaction and profit & loss records. It includes revenue, expenses, and profitability metrics across categories and time periods.
+---
 
-## 🛠️ Tools & Technologies
-- PostgreSQL – querying & transformations.
-- Power BI – visualization & dashboarding.
-- SQL → schema design, ETL, KPIs.
-- GitHub – version control & portfolio showcase.
+## 🗂️ Data Model
+Single fact table:
 
-## ❓ Key Business Questions
-- How do monthly deposits and withdrawals trend over time per user? [Deposits vs Withdrawals](images/deposit_balance_expences.png).
-- Which categories drive the highest spending and deposits? [Expences by category](images/deposit_balance_expences.png)
-- What are users’ minimum and maximum balances? [Max/Min Balance](images/deposit_balance_expences.png)
-- Are there negative balance streaks for any users? [Negative streaks](images/consecutive_negative_balance.png)
-- How can users be segmented based on their financial behavior? [Segmentation](images/segmentation.png)
-- Which users pose higher financial risk or have retention concerns? [Risk](images/risk.png)
+**transactions**
+- transaction_id (PK)
+- account_id
+- transaction_date
+- transaction_type (Deposit / Withdrawal)
+- amount
+- currency
+- category
 
-Detailed query analysis, and logic are documented in [Analysis resume](sql/Analysis_resume.sql).
+---
 
-## 📁 Repository Structure
-- docs/                  → ERD
-- images/                → screenshots of dashboards (Power BI) and query results (pgAdmin)
-- sql/                   → database schema, load script, and analysis queries
-- Analysis_resume.md     → All queries analysis used for this repository
-- README.md              → project summary and instructions  
+## ⚙️ Key Features & Analysis
 
+### 📊 Financial Performance
+- Monthly income vs expenses
+- Category-level spending analysis
 
-## 🗄 Database Schema & ERD
-Relationships:
-  - transactions.account_id → links deposits and withdrawals per user.
+### 💰 Balance Tracking
+- Running balance per account
+- Identification of maximum and minimum balance points
 
-All analysis queries use this table as a single fact table, allowing multiple metrics and aggregates per user/month.
+### ⚠️ Risk Detection
+- Consecutive negative balance periods
+- High-risk user identification
 
-## 🔄 How to Reproduce
-- Create a PostgreSQL database:
-      * In pgAdmin → right-click Databases → Create - Database → name it hr_analytics (or any name you preffer).
-- Schema & Data Import:
-      * Run the schema script in [SCHEMA](sql/SCHEMA.sql) to create all tables and insert data.
-- Sample queries:
-      * Analytical SQL queries are available in [Analysis](sql/Analysis.sql).
-      * These queries can be run in pgAdmin or connected directly to Power BI for visualization.
+### 📈 Growth Analysis
+- Month-over-month deposit & withdrawal trends
+- Cumulative financial flow tracking
 
-## 📈 Power BI Dashboard
-- KPI cards for users, deposits, expenses, risk, activity.
-- Line charts for monthly trends.
-- Incoming vs expenses comparisons.
-- Monthly flow and balances
-- Category breakdowns (expenses by type).
+### 🔍 Behavioral Analytics
+- Account activity classification:
+  - Dormant
+  - Normal
+  - High Activity
+  - Anomalous
 
-    Sample dashboard ... [Overall Chart](images/overall_chart.png) & [Continue Overall Chart](images/Overall_chart_2.png)
+### 🧠 Customer Segmentation
+- Saver vs Spender classification
+- Behavioral profiling based on transaction patterns
 
-## ✅ Key Takeaways
+### 🚨 Risk & Retention Modeling
+- Risk levels:
+  - High / Medium / Low
+- Retention categories:
+  - High / Low / Dormant
 
-- Revenue streams are concentrated in a few high-performing categories.
-- Seasonal variations significantly impact profitability.
-- Expense control in low-margin areas is critical for improving overall net income.
+---
+
+## 🏗️ Data Engineering Concepts Used
+- Common Table Expressions (CTEs)
+- Window Functions (LAG, SUM OVER, RANK)
+- Time Series Analysis
+- Data Imputation using COALESCE
+- FULL JOIN for data completeness
+- Analytical View Creation (`account_month_metrics`)
+
+---
+
+## 📊 Tools Used
+- PostgreSQL
+- SQL
+
+---
+
+## ⚠️ Notes
+- Dataset is synthetic and created for analytical purposes
+- Focus is on analytical logic rather than production-level normalization
+- View `account_month_metrics` acts as a reusable fact table for advanced analytics
+
+---
+
+## 🚀 Key Takeaways
+- Built a complete financial analytics workflow from raw transactions to risk modeling
+- Applied advanced SQL techniques for time-series and behavioral analysis
+- Designed scalable logic for real-world financial monitoring systems
