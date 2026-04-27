@@ -3,7 +3,7 @@
 ---
 
 # 1. Monthly Income vs Expenses
-### 📝 Query Goal
+### 📝 Business Question
 Calculate total monthly income (deposits) and expenses (withdrawals) across all users to evaluate overall cash flow trends.
 
 ### ⚙️ Logic
@@ -19,7 +19,7 @@ Calculate total monthly income (deposits) and expenses (withdrawals) across all 
 ---
 
 # 2. Total Spending by Category
-### 📝 Query Goal
+### 📝 Business Question
 Identify which categories contribute the most to total expenses.
 
 ### ⚙️ Logic
@@ -35,7 +35,7 @@ Identify which categories contribute the most to total expenses.
 ---
 
 # 3. Maximum and Minimum Balance per Account
-### 📝 Query Goal
+### 📝 Business Question
 Track cumulative account balances and identify peak and lowest financial positions per user.
 
 ### ⚙️ Logic
@@ -53,7 +53,7 @@ Track cumulative account balances and identify peak and lowest financial positio
 ---
 
 # 4. Consecutive Negative Balance Detection
-### 📝 Query Goal
+### 📝 Business Question
 Identify users experiencing sustained financial stress through consecutive negative balance months.
 
 ### ⚙️ Logic
@@ -70,7 +70,7 @@ Identify users experiencing sustained financial stress through consecutive negat
 ---
 
 # 5. Top Deposit and Withdrawal Categories per Month
-### 📝 Query Goal
+### 📝 Business Question
 Identify the most significant income source and the largest expense category for each user per month.
 
 ### ⚙️ Logic
@@ -89,7 +89,7 @@ Identify the most significant income source and the largest expense category for
 ---
 
 # 6. Month-over-Month Growth Analysis
-### 📝 Query Goal
+### 📝 Business Question
 Measure changes in deposits and withdrawals over time and evaluate growth trends per account.
 
 ### ⚙️ Logic
@@ -106,7 +106,7 @@ Measure changes in deposits and withdrawals over time and evaluate growth trends
 ---
 
 # 7. Account Activity Classification
-### 📝 Query Goal
+### 📝 Business Question
 Categorize monthly account behavior into meaningful activity levels.
 
 ### ⚙️ Logic
@@ -130,7 +130,7 @@ Categorize monthly account behavior into meaningful activity levels.
 ---
 
 # 8. User Segmentation
-### 📝 Query Goal
+### 📝 Business Question
 Classify users based on long-term financial behavior patterns.
 
 ### ⚙️ Logic
@@ -154,7 +154,7 @@ Classify users based on long-term financial behavior patterns.
 ---
 
 # 9. Risk & Retention Indicators
-### 📝 Query Goal
+### 📝 Business Question
 Assess financial risk and likelihood of user retention.
 
 ### ⚙️ Logic
