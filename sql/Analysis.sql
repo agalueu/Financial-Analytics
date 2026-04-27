@@ -1,21 +1,25 @@
--- 1. What are the Monthly Income vs Expenses for all users?
-SELECT 
-    DATE_TRUNC('month', transaction_date)::date AS month,
-    SUM(CASE WHEN transaction_type = 'Deposit' THEN amount ELSE 0 END) AS total_income,
-    SUM(CASE WHEN transaction_type = 'Withdrawal' THEN amount ELSE 0 END) AS total_expenses
+/* =========================================================
+   1. FINANCIAL PERFORMANCE
+   ========================================================= */
+SELECT 	DATE_TRUNC('month', transaction_date)::date AS month,
+    	SUM(CASE WHEN transaction_type = 'Deposit' THEN amount ELSE 0 END) AS total_income,
+    	SUM(CASE WHEN transaction_type = 'Withdrawal' THEN amount ELSE 0 END) AS total_expenses
 FROM transactions
 GROUP BY DATE_TRUNC('month', transaction_date)
 ORDER BY month;
 
--- 2. What are the total spent by Category?
+/* =========================================================
+   2. SPENDING BEHAVIOR
+   ========================================================= */
 SELECT category, SUM(amount) AS total_spent
 FROM transactions
 WHERE transaction_type = 'Withdrawal'
 GROUP BY category
 ORDER BY total_spent DESC;
 
-
--- 3. What is the highest and lowest balance per account?
+/* =========================================================
+   3. BALANCE ANALYSIS
+   ========================================================= */
 WITH deposits AS (
     SELECT  account_id,
             DATE_TRUNC('month', transaction_date)::date AS date,
@@ -56,7 +60,9 @@ SELECT DISTINCT
 FROM final_result
 ORDER BY users;
 
--- 4. Identify accounts that had negative balances for two or more consecutive months
+/* =========================================================
+   4. RISK DETENTION
+   ========================================================= */
 WITH deposit AS (
 	SELECT account_id, DATE_TRUNC('month', transaction_date)::date AS date, SUM(amount) AS deposits
 	FROM transactions
@@ -114,7 +120,9 @@ GROUP BY users, streak_id
 HAVING COUNT(*) >= 2
 ORDER BY users, "Start month";
 
--- 5. Which category has the highest deposits and the highest withdrawals per month?.
+/* =========================================================
+   5. CATEGORY INSIGHTS
+   ========================================================= */
 WITH deposit AS (
     SELECT 
         account_id,
@@ -173,7 +181,9 @@ FROM ranked_withdrawals
 WHERE rnk = 1
 ORDER BY account_id, date;
 
--- 6. Month over Month deposit/withdrawals growth per account
+/* =========================================================
+   6. GROWTH ANALYSIS
+   ========================================================= */
 --ON DEPOSITS
 WITH deposit AS (
 SELECT  account_id,
@@ -234,8 +244,8 @@ results AS (
 	FROM previous_withdrawal pw
 	FULL JOIN final_deposits fd ON pw.account_id = fd.account_id
 								AND pw.date = fd.date
-) --Its important to do the join for account and date because if we dont do it this way we can lose data for those month
-  --that don't have either deposit or withdrawals
+) /*Its important to do the join for account and date because if we dont do it this way we can lose data for those month
+  that don't have either deposit or withdrawals*/
 
 SELECT  users AS "User",
 		date AS "Date",
@@ -251,7 +261,9 @@ SELECT  users AS "User",
 		SUM("Balance Flow") OVER (PARTITION BY users ORDER BY date) AS "Cumulative Balance"
 FROM results;
 
--- 7. Account activity
+/* =========================================================
+   7. ACTIVITY CLASSIFICATION
+   ========================================================= */
 WITH months AS(
 	SELECT generate_series(
 		(SELECT MIN(DATE_TRUNC('month', transaction_date)) FROM transactions),
@@ -340,7 +352,10 @@ SELECT  *,
 END AS activity_category
 FROM overall;
 
-/*For the purpose of do things easier i will make a new table and use that as a fact table in order to not use the
+/* =========================================================
+   CREATING A VIEW
+   ========================================================= */
+/*For the purpose of do things easier i will make a new table (VIEW) and use that as a fact table in order to not use the
 same script over and over again*/
 CREATE OR REPLACE VIEW account_month_metrics AS 
 WITH months AS(
@@ -432,8 +447,10 @@ END AS activity_category
 FROM overall
 ;
 
--- 8. Segmentation / Profiling
-WITH table1 AS (
+/* =========================================================
+   8. SEGMENTATION
+   ========================================================= */
+WITH flag_table AS (
 	SELECT  users,
 			ROUND(AVG(monthly_net_flow), 2) AS avg_netflow,
 			COUNT (*) AS number_of_month,
@@ -453,14 +470,16 @@ SELECT 	users,
 			WHEN number_of_positives < number_of_negatives THEN 'Spender'
 			ELSE 'Balanced'
 		END AS segment
-FROM table1;
+FROM flag_table;
 
--- 9. Risk / Health Indicators
+/* =========================================================
+   9. RISK & RETENTION
+   ========================================================= */
 /*For this example im going to take this statements
 High risk: mostly negative net flow months, or many anomalous months, or low cumulative balance.
 Medium risk: mixed behavior, some negative months or occasional anomalies.
 Low risk: mostly positive net flow, few anomalies, stable balance.*/
-WITH table1 AS (
+WITH flag_table AS (
 	SELECT  users,
 			ROUND(AVG(monthly_net_flow), 2) AS avg_netflow,
 			COUNT (*) AS number_of_month,
@@ -481,14 +500,14 @@ last_cumulative AS (
 ),
 
 risk_metrics AS (
-	SELECT  t.users AS users, 
+	SELECT  ft.users AS users, 
 			avg_netflow,
 			ROUND(number_of_negatives/number_of_month::DECIMAL * 100, 2) AS perc_negative_month,
 			ROUND(number_of_anomalous/number_of_month::DECIMAL * 100, 2) AS perc_anomalous_month,
 			ROUND(number_of_dormant/number_of_month::DECIMAL * 100, 2) AS perc_dormant_month,
 			cumulative_balance
-	FROM table1 t
-	JOIN last_cumulative lc ON t.users = lc.users
+	FROM flag_table ft
+	JOIN last_cumulative lc ON ft.users = lc.users
 )
 
 SELECT  users,
